@@ -168,20 +168,43 @@ class quantum_circuit(qscgrn_model):
         self.encoder = RR
 
 
-    def compute_regulation(self):
-        """
-        Computes the tranformation matrices of each gate in `L_k`
-        layer and saves the result into self.regulation
-        """
-        arr = np.zeros((len(self.edges), \
-                        2**self.ngenes, 2**self.ngenes))
+    def der_regulation(self):
+    """
+    Computes the derivatives with respect to the parameters
+    in the `L_k` layers and save it in the derivative
+    attribute.
+    """
+    self._circuit_is_empty()
+    self._der_is_empty()
 
-        for i, edge in enumerate(self.edges):
-            idx = self.indexes[i]
-            arr[i] = cry_gate(self.theta[edge], self.ngenes,
-                              idx[0], idx[1])
+    # Create a set to keep track of applied gate pairs
+    applied_gates = set()
 
-        self.regulation = arr
+    for idx, edge in enumerate(self.edges):
+        index = self.indexes[idx]
+
+        # Check if the reverse pair of qubits has not been applied
+        reverse_edge = (index[1], index[0])
+        if reverse_edge in applied_gates:
+            continue  # Skip applying the gate if the reverse pair has been applied
+
+        der_matrix = np.array(self.regulation)
+        gate = der_cry_gate(self.theta[edge], self.ngenes,
+                            index[0], index[1])
+        der_matrix[idx] = gate
+
+        transform_regulation = matrix_multiplication(der_matrix)
+        transform_encoder = tensor_product(self.encoder)
+        transform = np.dot(transform_regulation, transform_encoder)
+
+        derivative = np.dot(transform, self.input)
+        self.derivatives.loc[edge] = derivative.reshape(2**self.ngenes,)
+
+        # Add the applied gate pair to the set
+        applied_gates.add(index)
+
+    # Clear the set after processing all edges
+    applied_gates.clear()
 
 
     def generate_circuit(self):
