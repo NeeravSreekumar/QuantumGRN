@@ -168,20 +168,30 @@ class quantum_circuit(qscgrn_model):
         self.encoder = RR
 
 
-    def compute_regulation(self):
-        """
-        Computes the tranformation matrices of each gate in `L_k`
-        layer and saves the result into self.regulation
-        """
-        arr = np.zeros((len(self.edges), \
-                        2**self.ngenes, 2**self.ngenes))
+def compute_regulation(self):
+    """
+    Computes the transformation matrices of each gate in `L_k`
+    layer and saves the result into self.regulation
+    """
+    arr = np.zeros((len(self.edges), 2**self.ngenes, 2**self.ngenes))
 
-        for i, edge in enumerate(self.edges):
-            idx = self.indexes[i]
-            arr[i] = cry_gate(self.theta[edge], self.ngenes,
-                              idx[0], idx[1])
+    # Set to keep track of applied gate pairs
+    applied_gates = set()
 
-        self.regulation = arr
+    for i, edge in enumerate(self.edges):
+        idx = self.indexes[i]
+        control, target = idx[0], idx[1]
+        
+        # Check if the pair of qubits has been processed before
+        if (control, target) not in applied_gates and (target, control) not in applied_gates:
+            # Apply the C-RY gate
+            arr[i] = cry_gate(self.theta[edge], self.ngenes, control, target)
+            
+            # Add the applied gate pair to the set
+            applied_gates.add((control, target))
+
+    self.regulation = arr
+
 
 
     def generate_circuit(self):
