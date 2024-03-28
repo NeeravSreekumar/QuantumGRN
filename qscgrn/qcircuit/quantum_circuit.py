@@ -167,7 +167,9 @@ class quantum_circuit(qscgrn_model):
 
         self.encoder = RR
 
-    def der_regulation(self):
+    
+
+    def compute_regulation(self):
         """
         Computes the derivatives with respect to the parameters
         in the `L_k` layers and save it in the derivative
