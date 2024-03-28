@@ -107,6 +107,16 @@ class quantum_circuit(qscgrn_model):
         return ("Quantum circuit for {ngenes} genes for GRN"
                 "modelling".format(ngenes=len(self.genes)))
 
+    def generate_circuit(self):
+        """
+        Computes the `L_enc` and `L_k` accordingly to parameters
+        such as `theta` and edges.
+        """
+        self.circuit = False
+        self.compute_encoder()
+        self.compute_regulation()
+        self.circuit = True
+
 
     def _circuit_is_empty(self):
         """
